@@ -1,0 +1,46 @@
+{{define "index"}}
+{{template "header"}}
+
+<!-- Header -->
+<div id="header">
+	<div class="container">
+		<!-- Logo -->
+		<div id="logo">
+			<h1><a href="#">Gluster Web</a></h1>
+		</div>
+		<!-- Nav -->
+		<nav id ="nav">
+			<ul class="list-group">
+			{{ range $id, $vol := .Vols}}
+				<li class="list-group-item">
+				<span class="show-detail" id="{{ $vol }}" data-id="{{$id}}"><strong>{{$vol}}</strong></span>
+				</li>
+			{{ end }}
+			</ul>
+		</nav>
+	</div>
+</div>
+<!-- Header -->
+	
+<script>
+$(function() {
+	$('.show-detail').click(function(){
+		var vol = $(this).attr("id");
+		var target = $(document.getElementById("vol-detail"));
+		$(document.getElementById(vol)).addClass("active")
+		var url = "/volume/detail?vol="+vol;
+		window.location.href = url
+		// $.ajax({
+		// 	url: "/volume/detail",
+		// 	type: "post",
+		// 	data: JSON.stringify({Vol: vol})
+		// }).done(function(data){
+		// 	target.html(data)
+		// });
+	});
+});
+</script>
+
+
+{{template "footer"}}
+{{end}}

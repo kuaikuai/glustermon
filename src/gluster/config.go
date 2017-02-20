@@ -8,6 +8,8 @@ import (
 
 type Config struct {
 	StaticDir string
+	IP        string
+	Port      string
 }
 
 var config *Config
