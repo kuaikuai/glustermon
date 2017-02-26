@@ -1,16 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-)
 
-var currentVolumeFiles []*os.File
+	"gomail"
+)
 
 type RequsetDeleteBrick struct {
 	VolInCheck string
@@ -27,17 +26,6 @@ type VolumeContent struct {
 	Bricks     []*Brick
 }
 
-func brickDeleteHandler(rw http.ResponseWriter, req *http.Request) {
-	var rdb RequsetDeleteBrick
-	decoder := json.NewDecoder(req.Body)
-	if err := decoder.Decode(&rdb); err != nil {
-		log.Println(err.Error())
-	}
-	vol := rdb.VolInCheck
-	brickName := rdb.BrickName
-
-}
-
 func volumeHandler(rw http.ResponseWriter, req *http.Request) {
 	// var rb RequsetBody
 	// decoder := json.NewDecoder(req.Body)
@@ -48,15 +36,21 @@ func volumeHandler(rw http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	vol := req.Form.Get("vol")
 	fmt.Println("Vol in volumeHandler:", vol)
+	config := GetConfig()
 	bricks, execError, volError := GetVolumeDetail(vol)
 	if execError != nil {
 		log.Println("Error: GetVolumeDetail ", execError.Error())
+		sendAlarmEmail(config.To, SUBJECT, execError.Error())
 	}
 	if volError != nil {
 		log.Println("Error: GetVolumeDetail ", volError.Error())
+		sendAlarmEmail(config.To, SUBJECT, volError.Error())
 	}
 	for _, brick := range bricks {
 		log.Println(*brick)
+		if brickStatus, ok := checkBrick(brick); !ok {
+			sendAlarmEmail(config.To, SUBJECT, brickStatus)
+		}
 	}
 	volumes, err := GetVolumes()
 	if err != nil {
@@ -109,11 +103,11 @@ func main() {
 		os.Exit(-1)
 	}
 	go RotateLog(logDir, logFile)
+	gomail.SetSender(config.Host, config.Server_addr, config.From, config.Passwd)
 	fs := http.FileServer(http.Dir(config.StaticDir))
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
 	http.HandleFunc("/index", glusterHandler)
 	http.HandleFunc("/volume/detail", volumeHandler)
-	http.HandleFunc("/brick/delete", brickDeleteHandler)
 	go http.ListenAndServe("127.0.0.1:"+config.Port, nil)
 	if err := http.ListenAndServe(config.IP+":"+config.Port, nil); err != nil {
 		log.Fatal("Error: ListenAndServe", config.Port)

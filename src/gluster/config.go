@@ -7,9 +7,14 @@ import (
 )
 
 type Config struct {
-	StaticDir string
-	IP        string
-	Port      string
+	StaticDir   string
+	IP          string
+	Port        string
+	Host        string
+	Server_addr string
+	From        string
+	Passwd      string
+	To          string
 }
 
 var config *Config

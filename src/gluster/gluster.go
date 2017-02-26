@@ -19,6 +19,24 @@ type Brick struct {
 	SplitBrainCount int
 }
 
+func checkBrick(brick *Brick) (string, bool) {
+	if brick.Status != "Connected" {
+		brickStatus := fmt.Sprintf("Error of brick %s, status: %s\n", brick.Name, brick.Status)
+		log.Println(brickStatus)
+		return brickStatus, false
+	} else if brick.HealCount > 0 {
+		brickStatus := fmt.Sprintf("Error of brick %s, healcount: %s\n", brick.Name, brick.HealCount)
+		log.Println(brickStatus)
+		return brickStatus, false
+	} else if brick.SplitBrainCount > 0 {
+		brickStatus := fmt.Sprintf("Error of brick %s, splitbraincount: %s\n", brick.Name, brick.SplitBrainCount)
+		log.Println(brickStatus)
+		return brickStatus, false
+	} else {
+		return "", true
+	}
+}
+
 func GetVolumes() ([]string, error) {
 	cmds := exec.Command("gluster", "volume", "info")
 	out, err := cmds.Output()
@@ -83,7 +101,7 @@ func GetVolumeDetail(vol string) (bricks []*Brick, execError, volError error) {
 	cmds := exec.Command("bash", "-c", "gluster volume heal "+vol+" info > "+volumeFilePath)
 	// log.Println(cmds.Args)
 	if err := cmds.Start(); err != nil {
-		execError = err
+		execError = fmt.Errorf("Volume %s Error: %s\n", vol, err.Error())
 		log.Println(err.Error())
 		return
 	}
@@ -94,8 +112,8 @@ func GetVolumeDetail(vol string) (bricks []*Brick, execError, volError error) {
 	select {
 	case <-time.After(30 * time.Minute): //Too many entries to heal
 		if err := cmds.Process.Kill(); err != nil {
-			execError = err
-			log.Println(err.Error())
+			execError = fmt.Errorf("Volume %s Error: %s\n", vol, err.Error())
+			log.Println(execError.Error())
 			return
 		}
 		volError = fmt.Errorf("Error: Too many entries to be healed")
@@ -103,15 +121,14 @@ func GetVolumeDetail(vol string) (bricks []*Brick, execError, volError error) {
 		return
 	case err := <-done:
 		if err != nil {
-			execError = err
-			log.Println(err.Error())
+			execError = fmt.Errorf("Volume %s Error: %s\n", vol, err.Error())
+			log.Println(execError.Error())
 			return
 		}
 		if bricks, volError = parseVolumeFile(volumeFilePath); volError != nil {
+			volError = fmt.Errorf("Volume %s Error: %s\n", vol, volError.Error())
 			return nil, nil, volError
 		}
 		return
 	}
 }
-
-func DeleteEntries(brick)

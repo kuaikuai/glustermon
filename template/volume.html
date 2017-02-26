@@ -24,7 +24,6 @@
 
 <!-- Main -->
 <div id="vol-detail" class="container">
-	<button class="delete-entries" id="{{$brick.Name}}">delete-entries</button>
 	{{ range $brick := .Bricks}}
 		<div>
 		{{ if (eq $brick.Status "Connected")}}
@@ -72,14 +71,6 @@ $(function() {
 		// }).done(function(data){
 		// 	target.html(data)
 		// });
-	});
-	$('.delete-entries').click(function(){
-		var brick = $(this).attr("id");
-		$.ajax({
-			type: "POST",
-			url: "/brick/delete",
-			data: JSON.stringify({"BrickName": brick, "VolInCheck": {{.VolInCheck}} })
-		});
 	});
 });
 </script>
