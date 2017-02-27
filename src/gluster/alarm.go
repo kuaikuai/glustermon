@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -31,6 +32,12 @@ func updateVolumesInWatch(volumes *[]string) {
 
 func watchVolumes() {
 	var volsInWatch *[]string
+	currentVols, err := GetVolumes()
+	if err != nil {
+		log.Println("Error:", err.Error())
+		return
+	}
+	volsInWatch = &currentVols
 	go updateVolumesInWatch(volsInWatch)
 	config := GetConfig()
 	to := config.To
@@ -40,8 +47,9 @@ func watchVolumes() {
 			wg.Add(1)
 			go func(volume string) {
 				defer wg.Done()
+				defer fmt.Printf("Volume %s finish watch\n", volume)
 				for {
-					bricks, execError, volError := GetVolumeDetail(vol)
+					bricks, execError, volError := GetVolumeDetail(volume)
 					if execError != nil {
 						log.Println("Error: GetVolumeDetail ", execError.Error())
 						sendAlarmEmail(to, SUBJECT, execError.Error())
@@ -53,7 +61,7 @@ func watchVolumes() {
 						return
 					}
 					for _, brick := range bricks {
-						if brickStatus, ok := checkBrick(brick); !ok {
+						if brickStatus, ok := checkBrick(volume, brick); !ok {
 							sendAlarmEmail(to, SUBJECT, brickStatus)
 							return
 						}

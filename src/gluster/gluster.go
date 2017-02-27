@@ -19,17 +19,17 @@ type Brick struct {
 	SplitBrainCount int
 }
 
-func checkBrick(brick *Brick) (string, bool) {
+func checkBrick(vol string, brick *Brick) (string, bool) {
 	if brick.Status != "Connected" {
-		brickStatus := fmt.Sprintf("Error of brick %s, status: %s\n", brick.Name, brick.Status)
+		brickStatus := fmt.Sprintf("Error of brick %s in Volume %s, status: %s\n", brick.Name, vol, brick.Status)
 		log.Println(brickStatus)
 		return brickStatus, false
 	} else if brick.HealCount > 0 {
-		brickStatus := fmt.Sprintf("Error of brick %s, healcount: %s\n", brick.Name, brick.HealCount)
+		brickStatus := fmt.Sprintf("Error of brick %s in Volume %s, healcount: %d\n", brick.Name, vol, brick.HealCount)
 		log.Println(brickStatus)
 		return brickStatus, false
 	} else if brick.SplitBrainCount > 0 {
-		brickStatus := fmt.Sprintf("Error of brick %s, splitbraincount: %s\n", brick.Name, brick.SplitBrainCount)
+		brickStatus := fmt.Sprintf("Error of brick %s in volume %s, splitbraincount: %d\n", brick.Name, vol, brick.SplitBrainCount)
 		log.Println(brickStatus)
 		return brickStatus, false
 	} else {

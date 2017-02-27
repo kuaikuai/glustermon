@@ -48,7 +48,7 @@ func volumeHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 	for _, brick := range bricks {
 		log.Println(*brick)
-		if brickStatus, ok := checkBrick(brick); !ok {
+		if brickStatus, ok := checkBrick(vol, brick); !ok {
 			sendAlarmEmail(config.To, SUBJECT, brickStatus)
 		}
 	}
@@ -104,6 +104,7 @@ func main() {
 	}
 	go RotateLog(logDir, logFile)
 	gomail.SetSender(config.Host, config.Server_addr, config.From, config.Passwd)
+	go watchVolumes()
 	fs := http.FileServer(http.Dir(config.StaticDir))
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
 	http.HandleFunc("/index", glusterHandler)
