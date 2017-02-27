@@ -1,3 +1,4 @@
 src/gluster/gluster
 src/.tags*
 .tags*
+bin/gswebd
