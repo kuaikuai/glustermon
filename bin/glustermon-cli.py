@@ -110,14 +110,14 @@ def current_user():
         return user_out.strip()
     return None
 
-def get_gsweb_status():
-	cmds = ['systemctl', 'status', 'gswebd']
+def get_glustermon_status():
+	cmds = ['systemctl', 'status', 'glustermond']
 	(out, res) = robust_exec(cmds, get_output=True)
 	return res == 0
 
-def stop_gsweb():
-	print("Stop gswebd if it is running")
-	cmds = ['systemctl', 'stop', 'gswebd']
+def stop_glustermon(debug=True):
+	print("Stop glustermond if it is running")
+	cmds = ['systemctl', 'stop', 'glustermond']
 	debug_print(cmds, debug)
 	robust_exec(cmds, get_output = True)
 
@@ -148,26 +148,26 @@ def setup_firewalld_options(debug=True):
     robust_exec(["bash", "-c", "firewall-cmd --zone=public --add-port=5555/tcp --permanent"])
     robust_exec(["bash", "-c", "firewall-cmd --reload"])
 
-def generate_gswebd_service(install_path):
-	print("#####generate gswebd service#####")
+def generate_glustermond_service(install_path):
+	print("#####generate glustermond service#####")
 	service_string = "[Unit]" + "\n"
-	service_string = service_string + "Description=gluster web"
+	service_string = service_string + "Description=gluster monitor"
 	service_string = service_string + "\n"
 	service_string = service_string + "[Service]\n"
 	service_string = service_string + "Environment=\"TERM=xterm-256color\"\n"
-	service_string = service_string + "ExecStart=" + install_path + "gsweb/bin/gswebd\n"
+	service_string = service_string + "ExecStart=" + install_path + "glustermon/bin/glustermond\n"
 	service_string = service_string + "User=root\n"
 	service_string = service_string + "Group=root\n"
 	service_string = service_string + "UMask=002\n"
 	service_string = service_string + "\n"
 	service_string = service_string + "[Install]\n"
 	service_string = service_string + "WantedBy=default.target\n"
-	with open("gswebd.service", "w") as f:
+	with open("glustermond.service", "w") as f:
 		f.write(service_string)
-	robust_exec(["cp", "-r", "gswebd.service", "/etc/systemd/system/gswebd.service"])
-	os.remove("gswebd.service")
+	robust_exec(["cp", "-r", "glustermond.service", "/etc/systemd/system/glustermond.service"])
+	os.remove("glustermond.service")
 
-def install_gsweb(from_email, passwd, to_email, ip, install_path, host, server_addr, debug = True):
+def install_glustermon(from_email, passwd, to_email, ip, install_path, host, server_addr, debug = True):
 	public_list = ["css", "js", "template"]
 	cu = current_user()
 	if cu!='root':
@@ -176,41 +176,41 @@ def install_gsweb(from_email, passwd, to_email, ip, install_path, host, server_a
 	# deal with the '/' of install_path
 	if install_path[-1] != '/':
 		install_path = install_path + "/"
-    #### ensure gsweb is stoppped
-	if get_gsweb_status():
-		stop_gsweb()
-    ##### copy gsweb files
-    #mkdir gsweb directory
-	debug_print("#####mkdir gsweb directory#####", debug)
-	if not check_file_exist(install_path + "gsweb"):
-		robust_exec(["mkdir", "-p", install_path + "gsweb"])
+    #### ensure glustermon is stoppped
+	if get_glustermon_status():
+		stop_glustermon(debug)
+    ##### copy glustermon files
+    #mkdir glustermon directory
+	debug_print("#####mkdir glustermon directory#####", debug)
+	if not check_file_exist(install_path + "glustermon"):
+		robust_exec(["mkdir", "-p", install_path + "glustermon"])
 	else:
-		print("#####{0}gsweb exists already#####".format(install_path))
-    #copy gsweb bin files
-	debug_print("#####copy gsweb bin files#####", debug)
-	if not check_file_exist(install_path + "gsweb/bin"):
-		robust_exec(["mkdir", "-p", install_path + "gsweb/bin"])
-	robust_exec(["cp", "-r", "gswebd", install_path + "gsweb/bin/"])
-	robust_exec(["cp", "-r", "gsweb-cli.py", install_path + "gsweb/bin/"])
-	#change gswebd execute permission
-	debug_print("#####change gswebd execute permission#####", debug)
-	robust_exec(["chmod", "u+x", install_path + "gsweb/bin/gswebd"])
-	#copy gsweb public files
-	debug_print("#####copy gsweb public files#####", debug)
-	if not check_file_exist(install_path + "gsweb/public"):
-		robust_exec(["mkdir", "-p", install_path + "gsweb/public"])
-	robust_exec(["mkdir", "-p", install_path + "gsweb/public/vol"])
-	robust_exec(["mkdir", "-p", install_path + "gsweb/public/log"])
+		print("#####{0}glustermon exists already#####".format(install_path))
+    #copy glustermon bin files
+	debug_print("#####copy glustermon bin files#####", debug)
+	if not check_file_exist(install_path + "glustermon/bin"):
+		robust_exec(["mkdir", "-p", install_path + "glustermon/bin"])
+	robust_exec(["cp", "-r", "glustermond", install_path + "glustermon/bin/"])
+	robust_exec(["cp", "-r", "glustermon-cli.py", install_path + "glustermon/bin/"])
+	#change glustermond execute permission
+	debug_print("#####change glustermond execute permission#####", debug)
+	robust_exec(["chmod", "u+x", install_path + "glustermon/bin/glustermond"])
+	#copy glustermon public files
+	debug_print("#####copy glustermon public files#####", debug)
+	if not check_file_exist(install_path + "glustermon/public"):
+		robust_exec(["mkdir", "-p", install_path + "glustermon/public"])
+	robust_exec(["mkdir", "-p", install_path + "glustermon/public/vol"])
+	robust_exec(["mkdir", "-p", install_path + "glustermon/public/log"])
 	for pub in public_list:
 		debug_print("#####copy {0}#####".format(pub), debug)
-		robust_exec(["cp", "-r", "../public/"+pub, install_path + "gsweb/public/"])
+		robust_exec(["cp", "-r", "../"+pub, install_path + "glustermon/public/"])
 	#### setup firewall options
 	setup_firewalld_options()
-	### start gswebd service
+	### start glustermond service
 	#generate config file
 	debug_print("#####generate config file#####", debug)
-	gswebdict = {
-	"StaticDir": install_path + "gsweb/public",
+	glustermondict = {
+	"StaticDir": install_path + "glustermon/public",
 	"IP": ip,
 	"Port": "5555",
 	"Host": host,
@@ -219,38 +219,38 @@ def install_gsweb(from_email, passwd, to_email, ip, install_path, host, server_a
 	"Passwd": passwd,
 	"To": to_email
 	}
-	gswebj = json.dumps(gswebdict, indent=1)
+	glustermonj = json.dumps(glustermondict, indent=1)
 	with open("tmp.conf", "w") as f:
-		debug_print(gswebj, debug)
-		f.write(gswebj)
-	robust_exec(["cp", "-r", "tmp.conf", install_path + "gsweb/bin/gswebd.conf"])
+		debug_print(glustermonj, debug)
+		f.write(glustermonj)
+	robust_exec(["cp", "-r", "tmp.conf", install_path + "glustermon/bin/glustermond.conf"])
 	os.remove("tmp.conf")
-	#generate gswebd service
-	generate_gswebd_service(install_path)
+	#generate glustermond service
+	generate_glustermond_service(install_path)
 	#reload systemd
 	debug_print("#####reload systemd#####", debug)
 	robust_exec(["systemctl", "daemon-reload"])
-	#enable and run gswebd service
-	debug_print("#####enable and run gswebd service#####", debug)
-	robust_exec(["systemctl", "restart", "gswebd"])
-	robust_exec(["systemctl", "enable", "gswebd"])
+	#enable and run glustermond service
+	debug_print("#####enable and run glustermond service#####", debug)
+	robust_exec(["systemctl", "restart", "glustermond"])
+	robust_exec(["systemctl", "enable", "glustermond"])
 
 
 
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser(prog='gsweb-cli.py', description = 'a helper cli for gluster-web')
+	parser = argparse.ArgumentParser(prog='glustermon-cli.py', description = 'a helper cli for glustermon')
 	subparser = parser.add_subparsers()
 
-	install_parser = subparser.add_parser('install', help = 'install gluster-web service')
+	install_parser = subparser.add_parser('install', help = 'install glustermon service')
 	install_parser.add_argument('from_email', help='The mailbox to send the alarm email')
 	install_parser.add_argument('passwd', help="To validate the sender's certificate")
 	install_parser.add_argument('to_email', help='The mailbox to receive the alarm email')
 	install_parser.add_argument('--ip', default='', help = 'LAN IP address of current machine')
-	install_parser.add_argument('--install_path', default='/var', help='Where the gluster-web will be installed')
+	install_parser.add_argument('--install_path', default='/var', help='Where the glustermon will be installed')
 	install_parser.add_argument('--host', default='smtp.gmail.com', help='Host is used by PlainAuth to validate the TLS certificate')
 	install_parser.add_argument('--server_addr', default='smtp.gmail.com:587', help='Smtp server address and related port')
 	install_parser.set_defaults(debug=False)
-	install_parser.set_defaults(func=lambda args: install_gsweb(args.from_email, args.passwd, args.to_email, args.ip, 
+	install_parser.set_defaults(func=lambda args: install_glustermon(args.from_email, args.passwd, args.to_email, args.ip, 
 		args.install_path, args.host, args.server_addr, debug = args.debug))
 	args = parser.parse_args()
 	args.func(args)

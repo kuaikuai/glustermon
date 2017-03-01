@@ -20,9 +20,9 @@ type Config struct {
 var config *Config
 
 func LoadConfig() *Config {
-	file, err := os.Open("/var/gluster_web/bin/glfs.config")
+	file, err := os.Open("/var/glustermon/bin/glustermond.conf")
 	if err != nil {
-		log.Fatalf("Error: Open config file glfs.config %v\n", err.Error())
+		log.Fatalf("Error: Open config file glustermond.conf %v\n", err.Error())
 	}
 	config = &Config{}
 	decoder := json.NewDecoder(file)

@@ -44,7 +44,7 @@ cd bin/
 
 * Lauch the install process with `python` script, you have to pass the `address` and `passwd` of the alert email sender and `address` of the alert email receiver: 
 ```
-python gsweb-cli.py install <from_email> <passwd> <to_email>
+python glustermon-cli.py install <from_email> <passwd> <to_email>
 ```
 
 ## Start and Stop
@@ -52,9 +52,11 @@ python gsweb-cli.py install <from_email> <passwd> <to_email>
 
 You can start/stop it with the commands below:
 ```
-sudo systemctl start/stop gswebd
+sudo systemctl start/stop glustermond
 ```
 
+## Web UI
+You can also watch the status of glusterfs from a Web UI open in port: `5555`
 
 ## Tips
 

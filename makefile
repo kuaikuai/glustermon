@@ -1,2 +1,2 @@
 main:
-	go build -o bin/gswebd gluster
+	go build -o bin/glustermond gluster

@@ -107,6 +107,7 @@ func main() {
 	go watchVolumes()
 	fs := http.FileServer(http.Dir(config.StaticDir))
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
+	http.HandleFunc("/", glusterHandler)
 	http.HandleFunc("/index", glusterHandler)
 	http.HandleFunc("/volume/detail", volumeHandler)
 	go http.ListenAndServe("127.0.0.1:"+config.Port, nil)
