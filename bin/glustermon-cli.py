@@ -1,5 +1,5 @@
 #!/bin/python
-import argparse, os, json
+import argparse, os, json, glusterhelper
 
 def debug_print(to_print, debug=True):
 	if debug:
@@ -151,8 +151,9 @@ def setup_firewalld_options(debug=True):
 def generate_glustermond_service(install_path):
 	print("#####generate glustermond service#####")
 	service_string = "[Unit]" + "\n"
-	service_string = service_string + "Description=gluster monitor"
-	service_string = service_string + "\n"
+	service_string = service_string + "Description=gluster monitor\n"
+    service_string = service_string + "After=glusterd.service\n"
+    service_string = service_string + "\n"
 	service_string = service_string + "[Service]\n"
 	service_string = service_string + "Environment=\"TERM=xterm-256color\"\n"
 	service_string = service_string + "ExecStart=" + install_path + "glustermon/bin/glustermond\n"
@@ -235,6 +236,7 @@ def install_glustermon(from_email, passwd, to_email, ip, install_path, host, ser
 	robust_exec(["systemctl", "restart", "glustermond"])
 	robust_exec(["systemctl", "enable", "glustermond"])
 
+def rm_heal_files(heal_file, brick_name, debug = True):
 
 
 if __name__ == "__main__":
@@ -252,5 +254,12 @@ if __name__ == "__main__":
 	install_parser.set_defaults(debug=False)
 	install_parser.set_defaults(func=lambda args: install_glustermon(args.from_email, args.passwd, args.to_email, args.ip, 
 		args.install_path, args.host, args.server_addr, debug = args.debug))
-	args = parser.parse_args()
+	
+    rm_heal_files_parser = subparser.add_parser('rm_heal', help= 'remove files needing healed manually')
+    rm_heal_files_parser.add_argument('heal_file', 'heal command generated file, which contains detailed heal info')
+    rm_heal_files_parser.add_argument('brick_name', 'specify the brick which needing remove files')
+    rm_heal_files_parser.set_defaults(debug=False)
+    rm_heal_files_parser.set_defaults(func=lambda args: rm_heal_files(args.heal_file, args.brick_name, debug = args.debug))
+
+    args = parser.parse_args()
 	args.func(args)
