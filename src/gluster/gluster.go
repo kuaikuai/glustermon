@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -130,5 +131,27 @@ func GetVolumeDetail(vol string) (bricks []*Brick, execError, volError error) {
 			return nil, nil, volError
 		}
 		return
+	}
+}
+
+//Remove volfile generated a week ago in case the vol directory is too large
+func RemoveVolFile(volDir string) {
+	tick := time.Tick(24 * time.Hour)
+	for _ = range tick {
+		files, err := ioutil.ReadDir(volDir)
+		if err != nil {
+			log.Print("Read vol directory info error", err)
+			return
+		}
+		dayDuration, _ := time.ParseDuration("-24h")
+		timeWeekAgo := time.Now().Add(7 * dayDuration)
+		for _, file := range files {
+			if file.ModTime().Before(timeWeekAgo) {
+				err := os.Remove(filepath.Join(volDir, file.Name()))
+				if err != nil {
+					log.Print("Error: remove volfile", err)
+				}
+			}
+		}
 	}
 }

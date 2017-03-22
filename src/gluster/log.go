@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -39,5 +40,27 @@ func RotateLog(logDir string, oldLogFile *os.File) {
 			return
 		}
 		time.Sleep(time.Minute * 1)
+	}
+}
+
+//Remove logfile generated a month ago in case the log directory is too large
+func RemoveLog(logDir string) {
+	tick := time.Tick(24 * time.Hour)
+	for _ = range tick {
+		files, err := ioutil.ReadDir(logDir)
+		if err != nil {
+			log.Print("Read log directory info error", err)
+			return
+		}
+		dayDuration, _ := time.ParseDuration("-24h")
+		timeMonthAgo := time.Now().Add(30 * dayDuration)
+		for _, file := range files {
+			if file.ModTime().Before(timeMonthAgo) {
+				err := os.Remove(filepath.Join(logDir, file.Name()))
+				if err != nil {
+					log.Print("Error: remove logfile", err)
+				}
+			}
+		}
 	}
 }

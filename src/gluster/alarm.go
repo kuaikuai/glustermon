@@ -53,17 +53,14 @@ func watchVolumes() {
 					if execError != nil {
 						log.Println("Error: GetVolumeDetail ", execError.Error())
 						sendAlarmEmail(to, SUBJECT, execError.Error())
-						return
 					}
 					if volError != nil {
 						log.Println("Error: GetVolumeDetail ", volError.Error())
 						sendAlarmEmail(to, SUBJECT, volError.Error())
-						return
 					}
 					for _, brick := range bricks {
 						if brickStatus, ok := checkBrick(volume, brick); !ok {
 							sendAlarmEmail(to, SUBJECT, brickStatus)
-							return
 						}
 					}
 					time.Sleep(time.Minute * 10)

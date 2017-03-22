@@ -105,6 +105,8 @@ func main() {
 	go RotateLog(logDir, logFile)
 	gomail.SetSender(config.Host, config.Server_addr, config.From, config.Passwd)
 	go watchVolumes()
+	go RemoveLog(logDir)
+	go RemoveVolFile(filepath.Join(config.StaticDir, "vol"))
 	fs := http.FileServer(http.Dir(config.StaticDir))
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
 	http.HandleFunc("/", glusterHandler)
